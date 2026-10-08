@@ -1,18 +1,36 @@
-# React + Vite
+# CutNow Mobile
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Cliente móvil de CutNow migrado a Expo SDK 57, React Native y Expo Router. El cliente web Vite permanece disponible durante la transición.
 
-Currently, two official plugins are available:
+## Requisitos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js 20.19 o posterior.
+- Expo Go actualizado para probar en un dispositivo, o un emulador Android/iOS configurado.
 
-## React Compiler
+## Desarrollo móvil
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+```sh
+npm install
+npm run dev
+```
 
-Note: This will impact Vite dev & build performances.
+Escanea el QR con Expo Go o usa `npm run android` / `npm run ios` con un emulador abierto. Los bundles se exportan con `npm run export:android` y `npm run export:ios`.
 
-## Expanding the ESLint configuration
+## Flujos móviles
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Autenticación, registro y recuperación de contraseña.
+- Catálogo y reservas con selector nativo de fecha y horarios disponibles.
+- Historial, cancelación y valoración de citas.
+- Tienda, carrito persistente y checkout por efectivo o WhatsApp.
+- Panel y gestión administrativa protegidos por rol.
+
+Las rutas Expo viven en `app/`. Firebase Auth conserva la sesión mediante AsyncStorage y las reglas de Firestore siguen siendo la autoridad para los permisos de datos.
+
+## Cliente web
+
+```sh
+npm run dev:web
+npm run build:web
+```
+
+La implementación web anterior se conserva en `src/components` durante la transición.

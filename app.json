@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "CutNow",
+    "slug": "cutnow",
+    "scheme": "cutnow",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "@react-native-community/datetimepicker"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "android": {
+      "package": "com.cutnow.app"
+    },
+    "ios": {
+      "bundleIdentifier": "com.cutnow.app"
+    }
+  }
+}

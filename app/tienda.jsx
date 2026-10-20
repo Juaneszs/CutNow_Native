@@ -131,7 +131,7 @@ export default function StoreScreen() {
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: "#101312" },
-  content: { width: "100%", maxWidth: 980, alignSelf: "center", paddingHorizontal: 18, paddingBottom: 30 },
+  content: { width: "100%", maxWidth: 980, alignSelf: "center", paddingHorizontal: 18, paddingBottom: 112 },
   header: { paddingTop: 24, paddingBottom: 18 },
   kicker: { color: "#46d995", fontSize: 10, fontWeight: "700", letterSpacing: 1.7 },
   title: { marginTop: 10, color: "#f3f7f4", fontSize: 28, fontWeight: "700", lineHeight: 35 },

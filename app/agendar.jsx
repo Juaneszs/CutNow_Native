@@ -131,9 +131,9 @@ export default function BookingScreen() {
   function cambiarSede(id) {
     const sede = sedes.find(item => item.id === id) || null;
     setSedeElegida(sede);
+    setBarberoElegido(null);
     setHoraElegida("");
     setFechaElegida(null);
-    if (!barberoId) setBarberoElegido(null);
   }
 
   async function confirmarCita() {
@@ -277,7 +277,7 @@ export default function BookingScreen() {
 
         <Text style={styles.label}>03 · Barbero</Text>
         <SelectField
-          disabled={Boolean(barberoId) || !sedeElegida}
+          disabled={!sedeElegida}
           selected={Boolean(barberoElegido)}
           value={barberoElegido ? `${barberoElegido.Nombre} · ${barberoElegido.especialidad || "Profesional"}` : sedeElegida ? "Toca para elegir un barbero" : "Primero selecciona una sede"}
           onPress={() => setSelectorActivo("barbero")}

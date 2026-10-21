@@ -16,14 +16,24 @@ service cloud.firestore {
     // Usuarios: cada uno ve/edita su propio perfil; admin ve todos
     match /usuarios/{uid} {
       allow read: if isAuth() && (request.auth.uid == uid || isAdmin());
-      allow create: if isAuth() && request.auth.uid == uid;
-      allow update: if isAuth() && request.auth.uid == uid;
+      allow create: if isAuth() &&
+        request.auth.uid == uid &&
+        request.resource.data.role == 'user';
+      allow update: if isAdmin() || (
+        isAuth() &&
+        request.auth.uid == uid &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['nombre', 'apellido'])
+      );
+      allow delete: if isAdmin();
     }
 
     // Citas: usuario ve las suyas; admin ve todas
     match /citas/{citaId} {
       allow read: if isAuth() && (resource.data.usuario_id == request.auth.uid || isAdmin());
-      allow create: if isAuth();
+      allow create: if isAuth() &&
+        request.resource.data.usuario_id == request.auth.uid &&
+        request.resource.data.estado == 'pendiente';
       // Cliente puede actualizar solo calificacion/comentario/calificado en sus citas finalizadas
       // Admin puede actualizar cualquier campo (cambio de estado)
       allow update: if isAuth() && (
@@ -33,6 +43,13 @@ service cloud.firestore {
           resource.data.estado == "finalizada" &&
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(["calificacion", "comentario", "calificado"])
+        )
+        || (
+          resource.data.usuario_id == request.auth.uid &&
+          resource.data.estado in ["pendiente", "confirmada"] &&
+          request.resource.data.estado == "cancelada" &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(["estado", "cancelada_at"])
         )
       );
       allow delete: if isAdmin();
@@ -45,7 +62,17 @@ service cloud.firestore {
 
       match /disponibilidad/{fecha} {
         allow read: if isAuth();
-        allow write: if isAuth();
+        allow create: if isAdmin() || (
+          isAuth() &&
+          request.resource.data.keys().hasAll(['slots_ocupados']) &&
+          request.resource.data.keys().hasOnly(['slots_ocupados'])
+        );
+        allow update: if isAdmin() || (
+          isAuth() &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['slots_ocupados'])
+        );
+        allow delete: if isAdmin();
       }
     }
 
@@ -64,6 +91,14 @@ service cloud.firestore {
     match /Productos/{id} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    match /pedidos/{pedidoId} {
+      allow read: if isAdmin() ||
+        (isAuth() && resource.data.usuario_id == request.auth.uid);
+      allow create: if isAuth() &&
+        request.resource.data.usuario_id == request.auth.uid;
+      allow update: if isAdmin();
     }
   }
 }

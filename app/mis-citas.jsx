@@ -25,6 +25,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase.native";
 import { useAuth } from "../src/native/useAuth";
+import LoadingState from "../src/native/LoadingState";
 
 const tabs = [
   { value: "pendiente", label: "Próximas" },
@@ -162,6 +163,7 @@ export default function MyAppointmentsScreen() {
   const [tab, setTab] = useState("pendiente");
   const [citas, setCitas] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState("");
   const [valorando, setValorando] = useState(null);
 
   useEffect(() => {
@@ -176,10 +178,17 @@ export default function MyAppointmentsScreen() {
       where("estado", "==", tab),
       orderBy("fecha", "asc"),
     );
+    setCargando(true);
+    setErrorCarga("");
+    setCitas([]);
     return onSnapshot(activeQuery, snapshot => {
       setCitas(snapshot.docs.map(item => ({ id: item.id, ...item.data() })));
       setCargando(false);
-    }, () => setCargando(false));
+    }, error => {
+      console.error("Error al escuchar las citas del usuario:", error);
+      setErrorCarga("No se pudieron cargar tus citas. Intenta nuevamente.");
+      setCargando(false);
+    });
   }, [authCargando, tab, user]);
 
   function confirmarCancelacion(cita) {
@@ -229,7 +238,9 @@ export default function MyAppointmentsScreen() {
         contentContainerStyle={styles.listContent}
         data={citas}
         keyExtractor={item => item.id}
-        ListEmptyComponent={cargando ? <ActivityIndicator color="#20c77a" style={styles.empty} /> : (
+        ListEmptyComponent={cargando ? <LoadingState /> : errorCarga ? (
+          <Text accessibilityRole="alert" style={styles.emptyText}>{errorCarga}</Text>
+        ) : (
           <View style={styles.emptyWrap}>
             <Text style={styles.emptyMark}>C</Text>
             <Text style={styles.emptyText}>{emptyCopy[tab]}</Text>

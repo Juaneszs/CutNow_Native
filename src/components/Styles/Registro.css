@@ -22,7 +22,7 @@ html, body, #root {
   background-attachment: fixed;
   background-repeat: no-repeat;
   
-  font-family: sans-serif;
+  font-family: inherit;
 }
 
 
@@ -39,7 +39,7 @@ html, body, #root {
 
 .register-left h1 {
   font-size: 3.5rem;
-  color: #00c853;
+  color: var(--accent);
   margin-bottom: 20px;
 }
 
@@ -101,7 +101,7 @@ html, body, #root {
 }
 
 .register-card input:focus {
-  border-color: #00c853;
+  border-color: var(--accent);
 }
 
 
@@ -115,7 +115,7 @@ html, body, #root {
   width: 100%;
   padding: 14px;
   margin-top: 28px;
-  background: #00c853;
+  background: var(--accent);
   border: none;
   border-radius: 8px;
   color: white;
@@ -126,7 +126,7 @@ html, body, #root {
 }
 
 .register-card button:hover:not(:disabled) {
-  background: #00a844;
+  background: var(--accent);
 }
 
 .register-card button:disabled {
@@ -142,4 +142,57 @@ html, body, #root {
   border-radius: 8px;
   font-size: 0.875rem;
   margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .register-page {
+    flex-direction: column;
+    min-height: 100svh;
+  }
+
+  .register-left {
+    align-items: center;
+    padding: 32px 24px 12px;
+    text-align: center;
+  }
+
+  .register-left h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+
+  .register-left p {
+    max-width: 560px;
+  }
+
+  .register-right {
+    padding: 20px 24px 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .register-left {
+    padding: 24px 16px 8px;
+  }
+
+  .register-left h1 {
+    font-size: 2rem;
+  }
+
+  .register-left p {
+    font-size: 1rem;
+  }
+
+  .register-right {
+    padding: 16px 12px 32px;
+  }
+
+  .register-card {
+    padding: 24px 20px;
+  }
+
+  .register-passwords {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
 }

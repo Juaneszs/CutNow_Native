@@ -1,6 +1,6 @@
 
 .text-green {
-  color: #00d655;
+  color: var(--accent);
 }
 
 /* Pantalla de Carga */
@@ -167,7 +167,7 @@
 }
 
 .td-ganancias {
-  color: #00d655;
+  color: var(--accent);
   font-weight: 600;
 }
 
@@ -201,12 +201,33 @@
   .admin-charts-row {
     grid-template-columns: 1fr; /* Pone una gráfica debajo de la otra en celular */
   }
+
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
   
   .admin-title {
     font-size: 26px;
   }
-  
   .admin-dashboard-container {
     padding: 20px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-dashboard-container {
+    padding: 20px 12px;
+  }
+
+  .admin-card {
+    padding: 18px 14px;
+  }
+
+  .admin-table {
+    min-width: 620px;
+  }
+
+  .admin-charts-row {
+    gap: 16px;
   }
 }

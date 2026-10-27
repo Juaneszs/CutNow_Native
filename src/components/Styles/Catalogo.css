@@ -21,8 +21,88 @@
   font-size: 1.1rem;
 }
 
+.client-summary {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 24px;
+  text-align: left;
+}
+
+.client-summary-card {
+  width: 100%;
+  max-width: none;
+  color: #fff;
+}
+
+.client-summary-card h2 {
+  margin: 0 0 20px;
+  font-size: 1.4rem;
+}
+
+.client-summary-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.client-summary-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.client-summary-stats strong {
+  color: var(--accent);
+  font-size: 1.5rem;
+}
+
+.client-summary-stats span,
+.client-summary-loading,
+.client-summary-error,
+.client-next-appointment,
+.client-no-appointments p {
+  color: #aaa;
+}
+
+.client-summary-loading,
+.client-summary-error,
+.client-next-appointment,
+.client-no-appointments p {
+  margin: 0;
+}
+
+.client-summary-error {
+  color: #f87171;
+}
+
+.client-next-appointment {
+  line-height: 1.6;
+}
+
+.client-next-appointment strong {
+  color: #fff;
+}
+
+.client-no-appointments {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.client-no-appointments .action-btn {
+  width: auto;
+}
+
 .text-green {
-  color: #00d655;
+  color: var(--accent);
 }
 
 .carrusel-wrapper {
@@ -69,8 +149,8 @@
 
 .barber-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 214, 85, 0.1);
-  border-color: rgba(0, 214, 85, 0.3);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 0 0 15px color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .avatar-container {
@@ -82,7 +162,7 @@
   height: 90px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #00d655;
+  border: 2px solid var(--accent);
   padding: 3px;
   background-color: #111;
 }
@@ -100,29 +180,12 @@
   text-align: center;
 }
 
-.btn-primary {
-  background-color: #00d655;
-  color: #000;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 24px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  width: 100%;
-}
-
-.btn-primary:hover {
-  background-color: #00bf4c;
-}
-
 .carrusel-btn {
   position: absolute;
   z-index: 10;
-  background: rgba(0, 214, 85, 0.15);
-  color: #00d655;
-  border: 1px solid rgba(0, 214, 85, 0.4);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
   width: 50px;
   height: 50px;
   border-radius: 50%;
@@ -136,7 +199,7 @@
 }
 
 .carrusel-btn:hover {
-  background: rgba(0, 214, 85, 0.4);
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
   color: #fff;
   transform: scale(1.1);
 }
@@ -173,8 +236,8 @@
 }
 
 .action-card.highlighted {
-  border-color: rgba(0, 214, 85, 0.5);
-  box-shadow: 0 10px 30px rgba(0, 214, 85, 0.05);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 5%, transparent);
 }
 
 .action-card-top {
@@ -202,9 +265,9 @@
 }
 
 .action-card.highlighted .action-icon {
-  color: #00d655;
-  border-color: rgba(0, 214, 85, 0.3);
-  background-color: rgba(0, 214, 85, 0.05);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  background-color: color-mix(in srgb, var(--accent) 5%, transparent);
 }
 
 .action-text h3 {
@@ -215,7 +278,7 @@
 }
 
 .action-card.highlighted .action-text h3 {
-  color: #00d655;
+  color: var(--accent);
 }
 
 .action-text p {
@@ -254,21 +317,67 @@
 
 .action-btn.solid {
   background-color: transparent;
-  border: 1px solid rgba(0, 214, 85, 0.5);
-  color: #00d655;
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  color: var(--accent);
   font-weight: 600;
 }
 
 .action-btn.solid:hover {
-  background-color: #00d655;
-  border-color: #00d655;
+  background-color: var(--accent);
+  border-color: var(--accent);
   color: #000;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 214, 85, 0.25);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 @media (max-width: 768px) {
   .carrusel-btn {
     display: none;
+  }
+
+  .action-cards-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .action-card {
+    max-width: none;
+  }
+
+  .catalog-header h1 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .catalog-container {
+    padding: 24px 12px;
+  }
+
+  .client-summary-card {
+    padding: 20px 16px;
+  }
+
+  .client-summary-stats div {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+
+  .client-no-appointments {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .client-no-appointments .action-btn {
+    width: 100%;
+  }
+
+  .carrusel-track {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .barber-card {
+    width: min(260px, calc(100vw - 56px));
   }
 }

@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import {
   arrayRemove,
   collection,
+  deleteDoc,
   doc,
   onSnapshot,
   orderBy,
@@ -25,6 +26,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase.native";
 import { useAuth } from "../../src/native/useAuth";
+import LoadingState from "../../src/native/LoadingState";
 
 const money = value => `$${Number(value || 0).toLocaleString("es-CO")}`;
 
@@ -46,7 +48,7 @@ function CompleteModal({ cita, onClose, onConfirm }) {
   );
 }
 
-function AppointmentCard({ cita, onAccept, onComplete, onCancel, busy }) {
+function AppointmentCard({ cita, onAccept, onComplete, onCancel, onDelete, busy }) {
   const statusColor = cita.estado === "pendiente" ? "#f1c86b" : cita.estado === "confirmada" ? "#76dda9" : "#8cdeb2";
   return (
     <View style={styles.card}>
@@ -74,6 +76,11 @@ function AppointmentCard({ cita, onAccept, onComplete, onCancel, busy }) {
           <Pressable disabled={busy} onPress={() => onCancel(cita, "cancelar")} style={[styles.dangerButton, busy && styles.disabled]}><Text style={styles.dangerText}>Cancelar</Text></Pressable>
         </View>
       ) : null}
+      {["finalizada", "cancelada"].includes(cita.estado) && onDelete ? (
+        <Pressable disabled={busy} onPress={() => onDelete(cita)} style={[styles.dangerButton, busy && styles.disabled]}>
+          <Text style={styles.dangerText}>Eliminar</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -92,6 +99,7 @@ export default function AdminAppointmentsScreen() {
   const [cargando, setCargando] = useState(true);
   const [ocupada, setOcupada] = useState(null);
   const [porCompletar, setPorCompletar] = useState(null);
+  const [errorCarga, setErrorCarga] = useState("");
 
   useEffect(() => {
     if (!authCargando && (!user || !isAdmin)) router.replace("/catalogo");
@@ -100,12 +108,22 @@ export default function AdminAppointmentsScreen() {
   useEffect(() => {
     if (authCargando || !user || !isAdmin) return;
     const activeQuery = query(collection(db, "citas"), where("estado", "in", ["pendiente", "confirmada"]), orderBy("fecha", "asc"), orderBy("hora", "asc"));
-    const historyQuery = query(collection(db, "citas"), where("estado", "==", "finalizada"), orderBy("fecha", "desc"));
+    const historyQuery = query(collection(db, "citas"), where("estado", "in", ["finalizada", "cancelada"]), orderBy("fecha", "desc"));
     const stopActive = onSnapshot(activeQuery, snapshot => {
       setActivas(snapshot.docs.map(item => ({ id: item.id, ...item.data() })));
       setCargando(false);
-    }, () => setCargando(false));
-    const stopHistory = onSnapshot(historyQuery, snapshot => setHistorial(snapshot.docs.map(item => ({ id: item.id, ...item.data() }))));
+    }, error => {
+      console.error("Error al cargar citas activas:", error);
+      setErrorCarga("No se pudieron cargar las citas activas.");
+      setCargando(false);
+    });
+    const stopHistory = onSnapshot(historyQuery, snapshot => {
+      setHistorial(snapshot.docs.map(item => ({ id: item.id, ...item.data() })));
+    }, error => {
+      console.error("Error al cargar el historial de citas:", error);
+      setErrorCarga("No se pudo cargar el historial de citas.");
+      setCargando(false);
+    });
     return () => { stopActive(); stopHistory(); };
   }, [authCargando, isAdmin, user]);
 
@@ -159,14 +177,41 @@ export default function AdminAppointmentsScreen() {
     ]);
   }
 
-  const fuente = tab === "activas" ? activas : historial;
+  function eliminarCita(cita) {
+    Alert.alert("¿Eliminar cita?", "Esta acción no se puede deshacer.", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: async () => {
+          setOcupada(cita.id);
+          try {
+            await deleteDoc(doc(db, "citas", cita.id));
+          } catch (error) {
+            console.error("Error al eliminar cita:", error);
+            Alert.alert("No se pudo eliminar", "Intenta nuevamente.");
+          } finally {
+            setOcupada(null);
+          }
+        },
+      },
+    ]);
+  }
+
+  const fuente = tab === "activas"
+    ? activas
+    : historial.filter(cita => tab === "canceladas" ? cita.estado === "cancelada" : cita.estado === "finalizada");
   const term = busqueda.trim().toLowerCase();
   const filtradas = fuente.filter(cita => !term || (cita.usuario_nombre || "").toLowerCase().includes(term) || (cita.barbero_nombre || "").toLowerCase().includes(term));
   const pendientes = activas.filter(cita => cita.estado === "pendiente").length;
   const confirmadas = activas.filter(cita => cita.estado === "confirmada").length;
-  const ingresoHoy = historial.filter(cita => cita.fecha === new Date().toISOString().slice(0, 10)).reduce((sum, cita) => sum + (Number(cita.precio) || 0), 0);
+  const hoy = new Date();
+  const fechaLocalHoy = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
+  const finalizadas = historial.filter(cita => cita.estado === "finalizada");
+  const canceladas = historial.filter(cita => cita.estado === "cancelada");
+  const ingresoHoy = finalizadas.filter(cita => cita.fecha === fechaLocalHoy).reduce((sum, cita) => sum + (Number(cita.precio) || 0), 0);
 
-  if (authCargando || cargando || !user || !isAdmin) return <View style={styles.center}><ActivityIndicator color="#20c77a" /></View>;
+  if (authCargando || cargando || !user || !isAdmin) return <LoadingState message={errorCarga || "Cargando citas..."} />;
 
   return (
     <ScrollView style={styles.page} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -177,22 +222,23 @@ export default function AdminAppointmentsScreen() {
       <View style={styles.summaryGrid}>
         <Summary label="Pendientes" value={String(pendientes)} color="#f1c86b" />
         <Summary label="Confirmadas" value={String(confirmadas)} color="#76dda9" />
-        <Summary label="Finalizadas" value={String(historial.length)} color="#8cdeb2" />
+        <Summary label="Finalizadas" value={String(finalizadas.length)} color="#8cdeb2" />
         <Summary label="Ingresos hoy" value={money(ingresoHoy)} color="#46d995" />
       </View>
       <TextInput onChangeText={setBusqueda} placeholder="Buscar cliente o barbero" placeholderTextColor="#84908a" style={styles.search} value={busqueda} />
       <View style={styles.tabs}>
-        {[{ key: "activas", label: `Activas · ${activas.length}` }, { key: "historial", label: `Historial · ${historial.length}` }].map(item => {
+        {[{ key: "activas", label: `Activas · ${activas.length}` }, { key: "historial", label: `Historial · ${finalizadas.length}` }, { key: "canceladas", label: `Canceladas · ${canceladas.length}` }].map(item => {
           const selected = item.key === tab;
           return <Pressable key={item.key} accessibilityRole="tab" accessibilityState={{ selected }} onPress={() => setTab(item.key)} style={[styles.tab, selected && styles.tabActive]}><Text style={[styles.tabText, selected && styles.tabTextActive]}>{item.label}</Text></Pressable>;
         })}
       </View>
+      {errorCarga ? <Text accessibilityRole="alert" style={styles.error}>{errorCarga}</Text> : null}
       {tab === "activas" ? ["pendiente", "confirmada"].map(status => {
         const group = filtradas.filter(cita => cita.estado === status);
         if (!group.length) return null;
         return <View key={status} style={styles.group}><Text style={styles.groupTitle}>{status === "pendiente" ? "Por confirmar" : "Confirmadas"} · {group.length}</Text>{group.map(cita => <AppointmentCard key={cita.id} cita={cita} busy={ocupada === cita.id} onAccept={aceptar} onComplete={setPorCompletar} onCancel={confirmarCancelacion} />)}</View>;
-      }) : filtradas.map(cita => <AppointmentCard key={cita.id} cita={cita} busy={false} onAccept={() => {}} onComplete={() => {}} onCancel={() => {}} />)}
-      {!filtradas.length ? <Text style={styles.empty}>{term ? "No hay resultados para esa búsqueda." : tab === "activas" ? "No hay citas activas." : "Aún no hay citas finalizadas."}</Text> : null}
+      }) : filtradas.map(cita => <AppointmentCard key={cita.id} cita={cita} busy={ocupada === cita.id} onDelete={eliminarCita} />)}
+      {!filtradas.length ? <Text style={styles.empty}>{errorCarga ? "No fue posible consultar las citas." : term ? "No hay resultados para esa búsqueda." : tab === "activas" ? "No hay citas activas." : tab === "canceladas" ? "Aún no hay citas canceladas." : "Aún no hay citas finalizadas."}</Text> : null}
     </ScrollView>
   );
 }
@@ -203,7 +249,7 @@ function Summary({ label, value, color }) {
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: "#101312" },
-  content: { width: "100%", maxWidth: 960, alignSelf: "center", paddingHorizontal: 18, paddingTop: 20, paddingBottom: 28 },
+  content: { width: "100%", maxWidth: 960, alignSelf: "center", paddingHorizontal: 18, paddingTop: 20, paddingBottom: 120 },
   flex: { flex: 1 },
   kicker: { color: "#46d995", fontSize: 10, fontWeight: "700", letterSpacing: 1.6 },
   title: { marginTop: 8, color: "#f3f7f4", fontSize: 26, fontWeight: "700" },
@@ -237,6 +283,7 @@ const styles = StyleSheet.create({
   dangerButton: { flex: 1, minHeight: 40, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#59302c", borderRadius: 7 },
   dangerText: { color: "#ff9b90", fontSize: 12, fontWeight: "700" },
   disabled: { opacity: 0.5 },
+  error: { marginTop: 12, color: "#ff8e83", fontSize: 13, lineHeight: 19 },
   empty: { paddingVertical: 35, color: "#8e9a92", fontSize: 13, textAlign: "center" },
   modalBackdrop: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 18, backgroundColor: "rgba(0,0,0,0.78)" },
   modalCard: { width: "100%", maxWidth: 420, padding: 22, borderWidth: 1, borderColor: "#344139", borderRadius: 12, backgroundColor: "#171d19" },

@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../firebase.native";
+import { isValidEmail } from "../src/utils/validation";
 
 export default function RecoverPasswordScreen() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function RecoverPasswordScreen() {
   const [error, setError] = useState("");
 
   async function enviarEnlace() {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    if (!isValidEmail(email)) {
       setError("Escribe un correo electrónico válido.");
       return;
     }

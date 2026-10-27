@@ -1,0 +1,39 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "citas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "estado", "order": "ASCENDING" },
+        { "fieldPath": "fecha", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "citas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "estado", "order": "ASCENDING" },
+        { "fieldPath": "fecha", "order": "ASCENDING" },
+        { "fieldPath": "hora", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "citas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "usuario_id", "order": "ASCENDING" },
+        { "fieldPath": "estado", "order": "ASCENDING" },
+        { "fieldPath": "fecha", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "citas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "barbero_id", "order": "ASCENDING" },
+        { "fieldPath": "estado", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

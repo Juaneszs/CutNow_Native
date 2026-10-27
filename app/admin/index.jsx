@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,6 +11,8 @@ import { useRouter } from "expo-router";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase.native";
 import { useAuth } from "../../src/native/useAuth";
+import LoadingState from "../../src/native/LoadingState";
+import EmptyState from "../../src/native/EmptyState";
 
 const money = value => `$${Number(value || 0).toLocaleString("es-CO")}`;
 
@@ -87,8 +88,8 @@ export default function AdminDashboardScreen() {
     return () => { activa = false; };
   }, [authCargando, isAdmin, user]);
 
-  if (authCargando || cargando) return <View style={styles.center}><ActivityIndicator color="#20c77a" /></View>;
-  if (!user || !isAdmin) return <View style={styles.center}><ActivityIndicator color="#20c77a" /></View>;
+  if (authCargando || cargando) return <LoadingState />;
+  if (!user || !isAdmin) return <LoadingState />;
   if (error || !stats) return <View style={styles.center}><Text style={styles.error}>{error || "No hay métricas disponibles."}</Text></View>;
 
   const columns = width > 600 ? 4 : 2;
@@ -102,6 +103,9 @@ export default function AdminDashboardScreen() {
       <Pressable onPress={() => router.push("/admin/citas")} style={styles.manageButton}>
         <Text style={styles.manageButtonText}>Gestionar citas  →</Text>
       </Pressable>
+      <Pressable onPress={() => router.push("/configuracion")} style={[styles.manageButton, styles.secondaryManageButton]}>
+        <Text style={[styles.manageButtonText, styles.secondaryManageButtonText]}>Gestionar barberos, servicios, sedes, productos y pedidos  →</Text>
+      </Pressable>
 
       <View style={styles.statsGrid}>
         <StatCard label="Clientes" value={stats.clientes.toLocaleString()} hint="Con reservas" columns={columns} />
@@ -112,17 +116,19 @@ export default function AdminDashboardScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Ingresos mensuales</Text>
-        <View style={styles.chart}>
-          {stats.meses.map(month => (
-            <View key={month.key} style={styles.barGroup}>
-              <Text numberOfLines={1} style={styles.barValue}>{month.value ? money(month.value) : ""}</Text>
-              <View style={styles.barTrack}>
-                <View style={[styles.bar, { height: `${Math.max((month.value / maxMonth) * 100, month.value ? 8 : 2)}%` }]} />
+        {stats.meses.some(month => month.value > 0) ? (
+          <View style={styles.chart}>
+            {stats.meses.map(month => (
+              <View key={month.key} style={styles.barGroup}>
+                <Text numberOfLines={1} style={styles.barValue}>{month.value ? money(month.value) : ""}</Text>
+                <View style={styles.barTrack}>
+                  <View style={[styles.bar, { height: `${Math.max((month.value / maxMonth) * 100, month.value ? 8 : 2)}%` }]} />
+                </View>
+                <Text style={styles.monthLabel}>{month.label}</Text>
               </View>
-              <Text style={styles.monthLabel}>{month.label}</Text>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        ) : <EmptyState icon="▥" message="Aún no hay datos para mostrar en el gráfico." />}
       </View>
 
       <View style={styles.section}>
@@ -154,12 +160,14 @@ function StatCard({ label, value, hint, columns }) {
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: "#101312" },
-  content: { width: "100%", maxWidth: 960, alignSelf: "center", paddingHorizontal: 18, paddingTop: 22, paddingBottom: 30 },
+  content: { width: "100%", maxWidth: 960, alignSelf: "center", paddingHorizontal: 18, paddingTop: 22, paddingBottom: 120 },
   kicker: { color: "#46d995", fontSize: 10, fontWeight: "700", letterSpacing: 1.7 },
   title: { marginTop: 9, color: "#f3f7f4", fontSize: 27, fontWeight: "700" },
   subtitle: { marginTop: 6, color: "#aab4ad", fontSize: 13, lineHeight: 19 },
   manageButton: { alignSelf: "flex-start", marginTop: 15, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 7, backgroundColor: "#20c77a" },
   manageButtonText: { color: "#07140d", fontSize: 13, fontWeight: "800" },
+  secondaryManageButton: { backgroundColor: "#202a23" },
+  secondaryManageButtonText: { color: "#b9f3d2" },
   statsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 9, marginTop: 20 },
   statCard: { minHeight: 105, justifyContent: "center", padding: 12, borderWidth: 1, borderColor: "#29362e", borderRadius: 9, backgroundColor: "#171d19" },
   statLabel: { color: "#98a49c", fontSize: 11, fontWeight: "600" },

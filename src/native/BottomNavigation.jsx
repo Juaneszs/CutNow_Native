@@ -16,9 +16,13 @@ export function BottomNavigation() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, cargando } = useAuth();
-  const activeTab = tabs.find(tab => tab.path === pathname);
+  const activeTab = tabs.find(tab => tab.path === pathname)
+    || (pathname === "/checkout" ? tabs[0] : null)
+    || (pathname === "/agendar" ? tabs[1] : null)
+    || (pathname.startsWith("/admin") ? tabs[3] : null);
+  const authScreen = ["/", "/registro", "/recuperar-contrasena"].includes(pathname);
 
-  if (cargando || !user || !activeTab) return null;
+  if (cargando || !user || authScreen) return null;
 
   return (
     <SafeAreaView edges={["bottom"]} pointerEvents="box-none" style={styles.safeArea}>
@@ -30,7 +34,7 @@ export function BottomNavigation() {
       >
         <View accessibilityRole="tablist" style={styles.bar}>
           {tabs.map(tab => {
-            const active = tab.path === activeTab.path;
+            const active = Boolean(activeTab && tab.path === activeTab.path);
             return (
               <Pressable
                 key={tab.path}

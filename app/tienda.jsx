@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   Image,
@@ -16,6 +15,8 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase.native";
 import { useAuth } from "../src/native/useAuth";
 import { useCart } from "../src/native/useCart";
+import LoadingState from "../src/native/LoadingState";
+import EmptyState from "../src/native/EmptyState";
 
 const categorias = [
   { nombre: "Herramientas", icono: "✂" },
@@ -33,6 +34,7 @@ export default function StoreScreen() {
   const [categoria, setCategoria] = useState("Herramientas");
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
+  const [fotosFallidas, setFotosFallidas] = useState([]);
 
   useEffect(() => {
     let activa = true;
@@ -81,7 +83,7 @@ export default function StoreScreen() {
         })}
       </ScrollView>
 
-      {cargando ? <ActivityIndicator color="#20c77a" style={styles.loading} /> : error ? <Text style={styles.empty}>{error}</Text> : visible.length ? (
+      {cargando ? <LoadingState /> : error ? <Text style={styles.empty}>{error}</Text> : visible.length ? (
         <FlatList
           data={visible}
           key={columns}
@@ -91,7 +93,18 @@ export default function StoreScreen() {
           columnWrapperStyle={columns > 1 ? styles.gridRow : undefined}
           renderItem={({ item }) => (
             <View style={[styles.productCard, columns > 1 && styles.productColumn]}>
-              {item.imagen ? <Image source={{ uri: item.imagen }} style={styles.productImage} resizeMode="cover" /> : <View style={[styles.productImage, styles.imageFallback]}><Text style={styles.fallbackMark}>CN</Text></View>}
+              {item.imagen && !fotosFallidas.includes(item.id) ? (
+                <Image
+                  onError={() => setFotosFallidas(current => [...current, item.id])}
+                  source={{ uri: item.imagen }}
+                  style={styles.productImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={[styles.productImage, styles.imageFallback]}>
+                  <Text style={styles.fallbackMark}>{item.nombre?.[0]?.toUpperCase() || "C"}</Text>
+                </View>
+              )}
               <Text style={styles.pickup}>RECOGIDA EN LOCAL</Text>
               <Text style={styles.productName}>{item.nombre || "Producto CutNow"}</Text>
               <Text style={styles.productPrice}>{money(item.precio)}</Text>
@@ -102,7 +115,7 @@ export default function StoreScreen() {
           )}
           style={styles.grid}
         />
-      ) : <Text style={styles.empty}>No hay productos en esta categoría.</Text>}
+      ) : <EmptyState icon="▣" message="No hay productos en esta categoría." />}
 
       <View style={styles.cartSection}>
         <View style={styles.cartHeading}>

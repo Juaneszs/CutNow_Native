@@ -25,7 +25,7 @@
 }
 
 .text-green {
-  color: #00d655;
+  color: var(--accent);
 }
 
 .header-nav {
@@ -45,13 +45,57 @@
   color: #fff;
 }
 
+.admin-manage-menu {
+  position: relative;
+}
+
+.admin-manage-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.admin-manage-toggle:hover {
+  color: #fff;
+}
+
+.admin-manage-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  z-index: 1100;
+  display: grid;
+  min-width: 170px;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(16, 16, 16, 0.98);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+.admin-manage-dropdown .nav-link {
+  padding: 9px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.admin-manage-dropdown .nav-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
 /*BOTÓN DEL HEADER*/
 .nav-btn-agendar {
-  background-color: transparent; 
-  color: #00d655; 
-  border: 1px solid rgba(0, 214, 85, 0.5);
+  background-color: transparent;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
   text-decoration: none;
-  padding: 10px 22px; 
+  padding: 10px 22px;
   border-radius: 8px;
   font-size: 1.4rem;
   font-weight: 800;
@@ -62,11 +106,11 @@
 
 /* El efecto al pasar el mouse */
 .nav-btn-agendar:hover {
-  background-color: #00d655;
+  background-color: var(--accent);
   color: #000;
-  border-color: #00d655;
+  border-color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 214, 85, 0.25);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 /* --- FOOTER --- */
@@ -122,7 +166,7 @@
 }
 
 .footer-links a:hover {
-  color: #00d655;
+  color: var(--accent);
 }
 
 .footer-bottom {
@@ -143,7 +187,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #00b34a);
+  background: linear-gradient(135deg, var(--accent), var(--accent));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -176,4 +220,114 @@
 .nav-logout-btn:hover {
   border-color: rgba(239, 68, 68, 0.4);
   color: #f87171;
+}
+
+.mobile-menu-toggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    flex-wrap: wrap;
+    padding: 14px 18px;
+  }
+
+  .header-logo {
+    font-size: 1.6rem;
+  }
+
+  .mobile-menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--accent);
+    font-size: 25px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .header-nav {
+    display: none;
+    flex: 1 0 100%;
+    align-items: stretch;
+    gap: 0;
+    padding-top: 12px;
+  }
+
+  .header-nav.is-open {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header-nav > .nav-link,
+  .header-nav > .nav-btn-agendar,
+  .header-nav > .admin-manage-menu,
+  .header-nav > .nav-user-menu {
+    width: 100%;
+    padding: 12px 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .admin-nav-link,
+  .login-nav-link {
+    color: var(--accent);
+  }
+
+  .admin-manage-toggle {
+    padding: 0;
+  }
+
+  .admin-manage-dropdown {
+    position: static;
+    min-width: 0;
+    margin-top: 10px;
+    padding: 4px 0 0 14px;
+    border: 0;
+    border-left: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .nav-user-menu {
+    flex-wrap: wrap;
+  }
+
+  .nav-btn-agendar {
+    font-size: 1rem;
+    letter-spacing: 0;
+    text-align: center;
+  }
+
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .main-footer {
+    padding: 40px 20px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-container {
+    padding: 12px;
+  }
+
+  .nav-user-menu {
+    gap: 8px;
+  }
+
+  .nav-username {
+    max-width: calc(100vw - 160px);
+  }
+
+  .footer-container {
+    gap: 24px;
+  }
 }

@@ -13,6 +13,10 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useCart } from "../src/native/useCart";
+import { useAuth } from "../src/native/useAuth";
+import { crearPedidoNativo } from "../src/native/adminService";
+import LoadingState from "../src/native/LoadingState";
+import EmptyState from "../src/native/EmptyState";
 
 const money = value => `$${Number(value || 0).toLocaleString("es-CO")}`;
 
@@ -20,32 +24,61 @@ export default function CheckoutScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { carrito, cargado, vaciar } = useCart();
+  const { user, perfil } = useAuth();
   const [metodoPago, setMetodoPago] = useState("efectivo");
   const [enviando, setEnviando] = useState(false);
+  const [pedidoCreado, setPedidoCreado] = useState(false);
+  const [fotosFallidas, setFotosFallidas] = useState([]);
   const total = carrito.reduce((sum, item) => sum + (Number(item.precio) || 0), 0);
 
   async function confirmarCompra() {
     if (!carrito.length) return;
-    if (metodoPago === "transferencia") {
-      const lineas = carrito.map(item => `- ${item.nombre} - ${money(item.precio)}`).join("\n");
-      const mensaje = `Hola, quiero confirmar mi pedido de CutNow:\n\n${lineas}\n\nTotal a transferir: ${money(total)}\n\nQuedo atento a los datos para realizar la transferencia.`;
-      const url = `https://wa.me/573005782087?text=${encodeURIComponent(mensaje)}`;
-      setEnviando(true);
-      try {
+    if (!user) {
+      Alert.alert("Inicia sesión", "Debes iniciar sesión antes de confirmar el pedido.", [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Iniciar sesión", onPress: () => router.push("/") },
+      ]);
+      return;
+    }
+    setEnviando(true);
+    const yaExistiaPedido = pedidoCreado;
+    let pedidoGuardadoAhora = false;
+    try {
+      if (!pedidoCreado) {
+        await crearPedidoNativo({
+          usuarioId: user.uid,
+          usuarioNombre: perfil?.nombre || user.displayName || user.email?.split("@")[0] || "Cliente",
+          productos: carrito,
+          total,
+          metodoPago,
+        });
+        setPedidoCreado(true);
+        pedidoGuardadoAhora = true;
+      }
+
+      if (metodoPago === "transferencia") {
+        const lineas = carrito.map(item => `- ${item.nombre} - ${money(item.precio)}`).join("\n");
+        const mensaje = `Hola, quiero confirmar mi pedido de CutNow:\n\n${lineas}\n\nTotal a transferir: ${money(total)}\n\nQuedo atento a los datos para realizar la transferencia.`;
+        const url = `https://wa.me/573005782087?text=${encodeURIComponent(mensaje)}`;
         await Linking.openURL(url);
         vaciar();
         router.replace("/tienda");
-      } catch {
-        Alert.alert("No se pudo abrir WhatsApp", "Comprueba que tienes un navegador o WhatsApp instalado.");
-      } finally {
-        setEnviando(false);
+      } else {
+        Alert.alert("Pedido reservado", "Págalo en efectivo al recogerlo en la barbería.", [
+          { text: "Entendido", onPress: () => { vaciar(); router.replace("/tienda"); } },
+        ]);
       }
-      return;
+    } catch (error) {
+      console.error("Error al confirmar pedido:", error);
+      Alert.alert(
+        yaExistiaPedido || pedidoGuardadoAhora ? "No se pudo abrir WhatsApp" : "No se pudo guardar el pedido",
+        yaExistiaPedido || pedidoGuardadoAhora
+          ? "Tu pedido quedó registrado. Comprueba que tienes un navegador o WhatsApp instalado."
+          : "Intenta confirmar tu compra nuevamente.",
+      );
+    } finally {
+      setEnviando(false);
     }
-
-    Alert.alert("Pedido reservado", "Págalo en efectivo al recogerlo en la barbería.", [
-      { text: "Entendido", onPress: () => { vaciar(); router.replace("/tienda"); } },
-    ]);
   }
 
   function cancelarCompra() {
@@ -55,7 +88,7 @@ export default function CheckoutScreen() {
     ]);
   }
 
-  if (!cargado) return <View style={styles.center}><ActivityIndicator color="#20c77a" /></View>;
+  if (!cargado) return <LoadingState />;
 
   return (
     <ScrollView contentContainerStyle={styles.page}>
@@ -66,11 +99,30 @@ export default function CheckoutScreen() {
           <Text style={styles.sectionTitle}>Productos · {carrito.length}</Text>
           {carrito.length ? carrito.map(item => (
             <View key={item.idCarrito} style={styles.item}>
-              {item.imagen ? <Image source={{ uri: item.imagen }} style={styles.image} /> : <View style={[styles.image, styles.imageFallback]}><Text style={styles.fallbackMark}>CN</Text></View>}
+              {item.imagen && !fotosFallidas.includes(item.idCarrito) ? (
+                <Image
+                  onError={() => setFotosFallidas(current => [...current, item.idCarrito])}
+                  source={{ uri: item.imagen }}
+                  style={styles.image}
+                />
+              ) : (
+                <View style={[styles.image, styles.imageFallback]}>
+                  <Text style={styles.fallbackMark}>{item.nombre?.[0]?.toUpperCase() || "C"}</Text>
+                </View>
+              )}
               <Text numberOfLines={2} style={styles.itemName}>{item.nombre}</Text>
               <Text style={styles.itemPrice}>{money(item.precio)}</Text>
             </View>
-          )) : <Text style={styles.empty}>Tu carrito está vacío.</Text>}
+          )) : (
+            <View style={styles.emptyCart}>
+              <EmptyState
+                icon="🛒"
+                message="Tu carrito está vacío."
+                actionLabel="Ir a la tienda"
+                onAction={() => router.replace("/tienda")}
+              />
+            </View>
+          )}
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total</Text>
             <Text style={styles.totalValue}>{money(total)}</Text>
@@ -85,7 +137,7 @@ export default function CheckoutScreen() {
           ].map(option => {
             const active = metodoPago === option.value;
             return (
-              <Pressable key={option.value} accessibilityRole="radio" accessibilityState={{ selected: active }} onPress={() => setMetodoPago(option.value)} style={[styles.method, active && styles.methodActive]}>
+              <Pressable key={option.value} accessibilityRole="radio" accessibilityState={{ selected: active, disabled: pedidoCreado }} disabled={pedidoCreado} onPress={() => setMetodoPago(option.value)} style={[styles.method, active && styles.methodActive, pedidoCreado && styles.disabled]}>
                 <View style={[styles.radio, active && styles.radioActive]}>{active ? <View style={styles.radioDot} /> : null}</View>
                 <View style={styles.methodCopy}>
                   <Text style={styles.methodTitle}>{option.label}</Text>
@@ -106,7 +158,7 @@ export default function CheckoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, alignItems: "center", paddingVertical: 25, backgroundColor: "#101312" },
+  page: { flexGrow: 1, alignItems: "center", paddingTop: 25, paddingBottom: 120, backgroundColor: "#101312" },
   body: { paddingHorizontal: 18 },
   kicker: { color: "#46d995", fontSize: 10, fontWeight: "700", letterSpacing: 1.8 },
   title: { marginTop: 10, marginBottom: 20, color: "#f3f7f4", fontSize: 27, fontWeight: "700" },
@@ -119,6 +171,9 @@ const styles = StyleSheet.create({
   itemName: { flex: 1, color: "#d5ded8", fontSize: 13 },
   itemPrice: { color: "#d5ded8", fontSize: 13, fontWeight: "600" },
   empty: { paddingVertical: 14, color: "#8e9a92", fontSize: 13 },
+  emptyCart: { alignItems: "flex-start" },
+  shopButton: { marginTop: 4, paddingHorizontal: 13, paddingVertical: 9, borderRadius: 7, backgroundColor: "#20c77a" },
+  shopButtonText: { color: "#07140d", fontSize: 12, fontWeight: "800" },
   totalRow: { flexDirection: "row", justifyContent: "space-between", paddingTop: 13, borderTopWidth: 1, borderTopColor: "#3a4840" },
   totalLabel: { color: "#c9d2cc", fontSize: 14 },
   totalValue: { color: "#46d995", fontSize: 17, fontWeight: "800" },

@@ -217,6 +217,10 @@ test("authenticated users can only change slots_ocupados in availability documen
   );
 
   await assertSucceeds(setDoc(availability, { slots_ocupados: ["09:00"] }));
+  await assertFails(setDoc(
+    doc(db, "Barberos", "barbero-1", "disponibilidad", "2026-10-23"),
+    { slots_ocupados: ["09:00"], notas: "no permitido" },
+  ));
   await assertSucceeds(getDoc(availability));
   await assertFails(getDoc(
     doc(testEnv.unauthenticatedContext().firestore(), "Barberos", "barbero-1", "disponibilidad", "2026-10-21"),
@@ -256,7 +260,9 @@ test("users can create and read their own orders, while admins read and update a
   await assertSucceeds(getDoc(doc(otherUser, "pedidos", "pedido-ajeno")));
   await assertSucceeds(getDoc(doc(admin, "pedidos", "pedido-ajeno")));
   await assertFails(updateDoc(ownOrder, { estado: "pagado" }));
+  await assertFails(deleteDoc(ownOrder));
   await assertSucceeds(updateDoc(doc(admin, "pedidos", "pedido-ajeno"), {
     estado: "procesando",
   }));
+  await assertSucceeds(deleteDoc(doc(admin, "pedidos", "pedido-ajeno")));
 });

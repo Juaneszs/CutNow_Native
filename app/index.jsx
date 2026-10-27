@@ -16,6 +16,8 @@ import { useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase.native";
 import { useAuth } from "../src/native/useAuth";
+import { isValidEmail, isValidPassword } from "../src/utils/validation";
+import LoadingState from "../src/native/LoadingState";
 import background from "../public/fondobarb.png";
 
 export default function LoginScreen() {
@@ -32,15 +34,24 @@ export default function LoginScreen() {
   }, [authCargando, router, user]);
 
   async function iniciarSesion() {
-    if (!email.trim() || !password) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
       setError("Completa tu correo y contraseña.");
+      return;
+    }
+    if (!isValidEmail(trimmedEmail)) {
+      setError("El correo no tiene un formato válido.");
+      return;
+    }
+    if (!isValidPassword(password)) {
+      setError("La contraseña debe tener al menos 6 caracteres.");
       return;
     }
 
     setError("");
     setEnviando(true);
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      await signInWithEmailAndPassword(auth, trimmedEmail, password);
       router.replace("/catalogo");
     } catch (authError) {
       setError(
@@ -54,11 +65,7 @@ export default function LoginScreen() {
   }
 
   if (authCargando) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color="#20c77a" />
-      </View>
-    );
+    return <LoadingState />;
   }
 
   return (

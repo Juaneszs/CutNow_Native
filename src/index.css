@@ -11,6 +11,8 @@ html, body, #root {
   padding: 0;
 }
 :root {
+  --accent: #00d655;
+  --accent-hover: var(--accent);
   --bg: #000;
   --card-bg: rgba(20,20,20,.88);
   --input-bg: #2a2a2a;
@@ -21,12 +23,11 @@ html, body, #root {
 
   --border: rgba(255,255,255,.08);
 
-  --accent: #00c853;
-  --accent-hover: #00b34a;
-
   --shadow: 0 20px 40px rgba(0,0,0,.8);
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Inter', sans-serif;
+  --space-page: 24px;
+  --radius-card: 14px;
+  --radius-control: 8px;
 }
 
 body {
@@ -60,17 +61,178 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 24px;
 }
 
 .auth-card {
   max-width: 380px;
-  width: 100%;
+  width: min(100%, 380px);
   padding: 32px;
   background: var(--card-bg);
   backdrop-filter: blur(14px);
   border-radius: 14px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.auth-card.login-card,
+.auth-card.recovery-card {
+  max-width: 400px;
+}
+
+.auth-error {
+  margin-bottom: 16px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  font-size: 14px;
+  text-align: left;
+}
+
+.auth-label-row {
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+.auth-label-row label {
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.login-heading {
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.login-logo,
+.recovery-logo {
+  color: #fff;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.login-logo span,
+.recovery-logo span {
+  color: var(--accent);
+}
+
+.login-subtitle {
+  margin-top: 6px;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.login-forgot {
+  margin: -4px 0 12px;
+  text-align: right;
+}
+
+.login-forgot a,
+.login-footer a,
+.recovery-footer a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-forgot a {
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.login-footer {
+  margin-top: 20px;
+  color: #9ca3af;
+  font-size: 14px;
+  text-align: center;
+}
+
+.login-explore {
+  margin-top: 10px;
+  color: #6b7280;
+  font-size: 13px;
+  text-align: center;
+}
+
+.login-explore a {
+  color: #9ca3af;
+  text-decoration: underline;
+}
+
+.recovery-heading {
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.recovery-icon {
+  margin-bottom: 8px;
+  font-size: 44px;
+}
+
+.recovery-logo {
+  font-size: 28px;
+}
+
+.recovery-heading h2 {
+  margin: 16px 0 6px;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.recovery-heading p {
+  color: #9ca3af;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.recovery-success-box {
+  margin-bottom: 24px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 12px;
+  padding: 20px 16px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.recovery-success-icon {
+  margin-bottom: 8px;
+  font-size: 32px;
+}
+
+.recovery-success-title {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.recovery-success-detail {
+  margin-top: 8px;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.recovery-success-detail strong {
+  color: #fff;
+}
+
+.recovery-link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
+
+.recovery-card > .btn-primary {
+  margin-top: 16px;
+}
+
+.recovery-footer {
+  margin-top: 20px;
+  color: #9ca3af;
+  font-size: 14px;
   text-align: center;
 }
 
@@ -92,7 +254,7 @@ p {
   padding: 14px;
   margin-top: 10px;
   background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-  color: white;
+  color: #000;
   border: none;
   border-radius: 8px;
   font-weight: 600;
@@ -101,9 +263,35 @@ p {
   transition: .15s;
 }
 
+.btn-primary:disabled,
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 1px solid var(--accent);
+  border-color: var(--accent) !important;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+}
+
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 25px rgba(0,200,83,.35);
+  box-shadow: 0 10px 25px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.btn-primary:disabled:hover {
+  transform: none;
 }
 
 .btn-primary.big {
@@ -193,8 +381,7 @@ p {
   background: var(--accent);
   color: white;
   font-weight: 600;
-  box-shadow: 0 8px 20px rgba(0,200,83,.35);
-  font-family: 'inter', sans-serif;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 35%, transparent);
   font-weight: 500;
   letter-spacing: .01em;
 }
@@ -213,7 +400,7 @@ p {
 }
 
 .badge.done {
-  background: rgba(0,200,83,.15);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
   color: var(--accent);
 }
 
@@ -253,11 +440,61 @@ p {
   color: #9ca3af;
 }
 
+.app-error-fallback {
+  display: flex;
+  min-height: 50vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px 20px;
+  text-align: center;
+}
+
+.app-error-fallback p {
+  color: var(--placeholder);
+}
+
+.app-error-fallback .btn-primary {
+  display: inline-flex;
+  width: auto;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  text-decoration: none;
+}
+
 @media (max-width: 900px) {
   .citas-layout {
     grid-template-columns: 1fr;
   }
   .citas-scroll {
     max-height: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-container {
+    min-height: calc(100svh - 70px);
+    padding: 20px 16px;
+  }
+
+  .auth-card {
+    max-width: 480px !important;
+    padding: 28px 24px;
+  }
+
+  .catalog-container {
+    padding: 28px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 16px 12px;
+  }
+
+  .auth-card {
+    padding: 24px 18px;
   }
 }

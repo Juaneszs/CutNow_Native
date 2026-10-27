@@ -24,6 +24,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase.native";
 import { useAuth } from "../src/native/useAuth";
+import { generateAvailableHours } from "../src/utils/appointmentSlots";
+import LoadingState from "../src/native/LoadingState";
 
 function fechaComoClave(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -53,6 +55,7 @@ export default function BookingScreen() {
   const [fechaElegida, setFechaElegida] = useState(null);
   const [horaElegida, setHoraElegida] = useState("");
   const [horasDisponibles, setHorasDisponibles] = useState([]);
+  const [cargandoHoras, setCargandoHoras] = useState(false);
   const [mostrarFecha, setMostrarFecha] = useState(false);
   const [selectorActivo, setSelectorActivo] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -103,25 +106,26 @@ export default function BookingScreen() {
   useEffect(() => {
     setHoraElegida("");
     setHorasDisponibles([]);
-    if (!barberoElegido || !fechaElegida || !servicioElegido) return;
+    if (!barberoElegido || !fechaElegida || !servicioElegido) {
+      setCargandoHoras(false);
+      return;
+    }
 
     let activa = true;
+    setCargandoHoras(true);
+    setError("");
     async function cargarHoras() {
       try {
         const disponibilidad = doc(db, "Barberos", barberoElegido.id, "disponibilidad", fechaElegida);
         const snapshot = await getDoc(disponibilidad);
         const ocupados = snapshot.exists() ? snapshot.data().slots_ocupados || [] : [];
         const duracion = Math.max(Number(servicioElegido.duracion_min) || 30, 15);
-        const disponibles = [];
-        for (let hora = 8; hora < 18; hora += 1) {
-          for (let minuto = 0; minuto < 60; minuto += duracion) {
-            const slot = `${String(hora).padStart(2, "0")}:${String(minuto).padStart(2, "0")}`;
-            if (!ocupados.includes(slot)) disponibles.push(slot);
-          }
-        }
+        const disponibles = generateAvailableHours(duracion, ocupados);
         if (activa) setHorasDisponibles(disponibles);
       } catch {
         if (activa) setError("No se pudieron consultar los horarios. Intenta de nuevo.");
+      } finally {
+        if (activa) setCargandoHoras(false);
       }
     }
     cargarHoras();
@@ -197,7 +201,7 @@ export default function BookingScreen() {
         : [];
 
   if (authCargando || cargando) {
-    return <View style={styles.center}><ActivityIndicator color="#20c77a" /></View>;
+    return <LoadingState />;
   }
 
   if (confirmada) {
@@ -245,7 +249,11 @@ export default function BookingScreen() {
                 </Pressable>
               )) : (
                 <Text style={styles.optionEmpty}>
-                  {selectorActivo === "barbero" ? "No hay barberos activos en esta sede." : "No hay opciones disponibles."}
+                  {selectorActivo === "barbero"
+                    ? "No hay barberos activos en esta sede."
+                    : selectorActivo === "sede"
+                      ? "No hay sedes disponibles."
+                      : "No hay servicios disponibles."}
                 </Text>
               )}
             </ScrollView>
@@ -304,6 +312,11 @@ export default function BookingScreen() {
         <Text style={styles.label}>05 · Horario</Text>
         {!fechaElegida ? (
           <Text style={styles.hint}>Selecciona barbero y fecha para consultar disponibilidad.</Text>
+        ) : cargandoHoras ? (
+          <View style={styles.hoursLoading}>
+            <ActivityIndicator color="#20c77a" />
+            <Text style={styles.hint}>Buscando horas...</Text>
+          </View>
         ) : horasDisponibles.length ? (
           <View style={styles.slots}>
             {horasDisponibles.map(slot => (
@@ -360,7 +373,7 @@ function SelectField({ value, selected, disabled = false, onPress }) {
 }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, alignItems: "center", paddingVertical: 24, paddingHorizontal: 0, backgroundColor: "#101312" },
+  page: { flexGrow: 1, alignItems: "center", paddingTop: 24, paddingBottom: 120, paddingHorizontal: 0, backgroundColor: "#101312" },
   form: { paddingHorizontal: 20, paddingVertical: 8 },
   kicker: { color: "#46d995", fontSize: 10, fontWeight: "700", letterSpacing: 1.8 },
   title: { marginTop: 10, color: "#f3f7f4", fontSize: 27, fontWeight: "700", lineHeight: 34 },
@@ -374,6 +387,7 @@ const styles = StyleSheet.create({
   placeholderText: { color: "#84908a", fontSize: 14 },
   dateGlyph: { color: "#46d995", fontSize: 18 },
   hint: { paddingVertical: 13, color: "#84908a", fontSize: 13, lineHeight: 19 },
+  hoursLoading: { flexDirection: "row", alignItems: "center", gap: 8 },
   slots: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
   slot: { width: "23%", minHeight: 42, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#344139", borderRadius: 7, backgroundColor: "#1a211d" },
   slotSelected: { borderColor: "#20c77a", backgroundColor: "#173326" },

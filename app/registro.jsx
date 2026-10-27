@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -14,9 +14,12 @@ import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase.native";
+import { useAuth } from "../src/native/useAuth";
+import { isValidEmail, isValidPassword } from "../src/utils/validation";
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { user, cargando: authCargando } = useAuth();
   const { width } = useWindowDimensions();
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
@@ -26,16 +29,20 @@ export default function RegisterScreen() {
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
 
+  useEffect(() => {
+    if (!authCargando && user) router.replace("/catalogo");
+  }, [authCargando, router, user]);
+
   async function registrar() {
     if (![nombre, apellido, email, password, confirmar].every(value => value.trim())) {
       setError("Completa todos los campos.");
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!isValidEmail(email)) {
       setError("El correo electrónico no es válido.");
       return;
     }
-    if (password.length < 6) {
+    if (!isValidPassword(password)) {
       setError("La contraseña debe tener al menos 6 caracteres.");
       return;
     }
@@ -71,6 +78,8 @@ export default function RegisterScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+      {authCargando ? <ActivityIndicator color="#20c77a" /> : null}
+      {!authCargando && !user ? (
       <View style={[styles.card, { width: Math.min(width - 36, 460) }]}>
         <Text style={styles.kicker}>CUTNOW · NUEVA CUENTA</Text>
         <Text style={styles.title}>Tu próximo corte empieza aquí.</Text>
@@ -95,6 +104,7 @@ export default function RegisterScreen() {
           <Text style={styles.link}>Ya tengo una cuenta</Text>
         </Pressable>
       </View>
+      ) : null}
     </ScrollView>
   );
 }

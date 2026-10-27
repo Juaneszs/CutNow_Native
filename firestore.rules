@@ -65,12 +65,14 @@ service cloud.firestore {
         allow create: if isAdmin() || (
           isAuth() &&
           request.resource.data.keys().hasAll(['slots_ocupados']) &&
-          request.resource.data.keys().hasOnly(['slots_ocupados'])
+          request.resource.data.keys().hasOnly(['slots_ocupados']) &&
+          request.resource.data.slots_ocupados is list
         );
         allow update: if isAdmin() || (
           isAuth() &&
           request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['slots_ocupados'])
+            .hasOnly(['slots_ocupados']) &&
+          request.resource.data.slots_ocupados is list
         );
         allow delete: if isAdmin();
       }
@@ -99,6 +101,7 @@ service cloud.firestore {
       allow create: if isAuth() &&
         request.resource.data.usuario_id == request.auth.uid;
       allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
   }
 }

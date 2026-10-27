@@ -26,6 +26,7 @@
 .agendar-progreso {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 40px;
 }
@@ -49,7 +50,7 @@
   background: var(--accent);
   border-color: var(--accent);
   color: #000;
-  box-shadow: 0 0 10px rgba(0, 200, 83, 0.5);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 50%, transparent);
 }
 
 
@@ -90,7 +91,7 @@
   font-size: 14px;
   font-weight: 700;
   flex-shrink: 0;
-  box-shadow: 0 0 12px rgba(0, 200, 83, 0.4);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
 .agendar-select,
@@ -123,6 +124,11 @@
   border-color: #444;
 }
 
+.agendar-select:focus,
+.agendar-fecha:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
 
 .agendar-resumen {
   background: #111;
@@ -185,7 +191,7 @@
   transition: all 0.2s;
   margin-top: 8px;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0, 200, 83, 0.35);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .agendar-btn-confirmar:disabled {
@@ -196,7 +202,7 @@
 
 .agendar-btn-confirmar:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(0, 200, 83, 0.45);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 
@@ -297,4 +303,70 @@
 
 .btn-agendar-otra:hover {
   background: #333;
+}
+
+@media (max-width: 768px) {
+  .agendar-pagina {
+    min-height: auto;
+    padding: 24px 16px 48px;
+  }
+
+  .agendar-contenedor {
+    padding: 32px 20px;
+  }
+
+  .agendar-titulo {
+    font-size: 30px;
+  }
+
+  .agendar-progreso {
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .agendar-pagina {
+    padding: 16px 12px 36px;
+  }
+
+  .agendar-contenedor {
+    padding: 24px 16px;
+    border-radius: 14px;
+  }
+
+  .agendar-progreso {
+    gap: 8px;
+  }
+
+  .progreso-dot {
+    width: 32px;
+    height: 32px;
+  }
+
+  .agendar-label {
+    font-size: 16px;
+  }
+
+  .agendar-resumen {
+    padding: 16px;
+  }
+
+  .agendar-resumen-fila {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .resumen-valor {
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .exito-card {
+    padding: 32px 20px;
+  }
+
+  .exito-btns {
+    flex-direction: column;
+  }
 }
